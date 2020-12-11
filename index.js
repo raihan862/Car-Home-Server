@@ -20,6 +20,7 @@ const uname = process.env.USER_NAME;
 const pass = process.env.PASSWORD;
 const dbname = process.env.DATABASE_NAME;
 const collection = process.env.COLLECTION;
+const collection2 = process.env.COLLECTION2;
 const port = process.env.PORT || 5000;
 const uri = `mongodb+srv://${uname}:${pass}@cluster0.5av9x.mongodb.net/${dbname}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -31,6 +32,7 @@ app.get('/',(req,res)=>{
 })
 client.connect(err=>{
     const Cars = client.db(dbname).collection(collection);
+    const Comments = client.db(dbname).collection(collection2);
 
     app.post('/addCar',(req,res)=>{
         const Name = req.body.Name;
@@ -41,7 +43,7 @@ client.connect(err=>{
         
         Cars.insertOne({Name,brandName,modelName,price,uploadedPhoto})
         .then(result=>{
-          console.log(result.insertedCount);
+         
           const data ={Name,brandName,modelName,price,uploadedPhoto}
           res.set('data',data)
           
@@ -69,7 +71,7 @@ client.connect(err=>{
     })
 
     app.put('/updateCar/:id',(req,res)=>{
-        console.log("come");
+        
         const Name = req.body.Name;
         const brandName = req.body.brandName;
         const modelName =  req.body.modelName;
@@ -81,7 +83,7 @@ client.connect(err=>{
              photo = req.body.photo;
          }
          let uploadedPhoto;
-         console.log(req.body.uploadedPhoto);
+         
          if (req.body.size) {
             const contentType = req.body.contentType
             const size = req.body.size;
@@ -99,23 +101,47 @@ client.connect(err=>{
             $set:{Name,brandName,modelName,price,uploadedPhoto}
         }
         ).then(mgs=>{
-            console.log("update success");
+            
             res.redirect('/')
         })
-        .catch(errr=>console.log(errr))
+        .catch(errr=>{
+
+        })
     })
 
     app.delete('/deleteCar/:id',(req,res)=>{
-        console.log("come");
+         
         Cars.deleteOne({_id:ObjectId(req.params.id)})
         .then(resp=>res.send("Delete SuccessFully"))
         .catch(err=>{
-            console.log(err);
+            
         })
        
     })
+
+
+    app.post('/addComments',(req,res)=>{
+        const carId = req.body.carId;
+        const name = req.body.name;
+        const commentBody = req.body.commentBody;
+        
+        Comments.insertOne({carId,name,commentBody})
+        .then(resp=>{
+            
+           
+            res.status(200).send("")
+        })
+    })
     
-   
+    app.get('/getComments/:carId',(req,res)=>{
+        const carId = req.params.carId;
+         
+
+        Comments.find({carId: carId})
+        .toArray((error,document)=>{
+            res.send(document)
+        })
+    })
 })
 
 
